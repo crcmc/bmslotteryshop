@@ -349,6 +349,94 @@
     padding: 3px 10px; border-radius: 999px; font-size: 12px;
     font-weight: 600;
   }
+  .chip.neg { color: var(--danger); border-color: #fecaca; }
+  .chip.neu { color: var(--text-2); border-color: var(--border-strong); }
+
+  /* --- 분석 진행 인디케이터 --- */
+  .thinking {
+    padding: 28px 18px; text-align: center;
+    color: var(--text-2); font-size: 14px;
+    background: var(--surface-2); border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-top: 16px;
+  }
+  .thinking-step {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 500;
+  }
+  .thinking-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--primary);
+    animation: tdot 0.9s ease-in-out infinite;
+  }
+  @keyframes tdot { 0%,100%{opacity:.25; transform:scale(.8)} 50%{opacity:1; transform:scale(1.2)} }
+  .thinking-trace {
+    margin-top: 14px; font-size: 11.5px; color: var(--muted);
+    font-family: ui-monospace, 'D2Coding', 'Consolas', monospace;
+    line-height: 1.7; min-height: 48px;
+  }
+  .thinking-trace .ok { color: var(--success); }
+
+  /* --- 분석 헤더 / 점수 --- */
+  .analysis-head {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-top: 16px;
+  }
+  .mood-tag {
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 700;
+  }
+  .mood-tag.high { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .mood-tag.mid { background: var(--primary-soft); color: var(--primary-deep); border: 1px solid #c7d2fe; }
+  .mood-tag.low { background: #f3f4f6; color: var(--text-2); border: 1px solid var(--border-strong); }
+  .depth-bar {
+    flex: 1; min-width: 140px;
+    height: 6px; background: #e5e8ef;
+    border-radius: 999px; overflow: hidden;
+    position: relative;
+  }
+  .depth-bar-fill {
+    height: 100%; width: 0;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+    border-radius: 999px;
+    transition: width 0.6s ease-out;
+  }
+  .depth-num { color: var(--text-2); font-size: 12px; font-weight: 700; }
+
+  /* --- 서사 단락 --- */
+  .narrative {
+    margin-top: 14px;
+    padding: 16px 18px;
+    background: linear-gradient(180deg, #fffbea 0%, #fff8d8 100%);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    line-height: 1.75; font-size: 14px;
+    color: var(--text);
+  }
+  .narrative p { margin: 0 0 10px; }
+  .narrative p:last-child { margin-bottom: 0; }
+  .narrative .em { color: var(--accent); font-weight: 700; }
+
+  .symbol-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px; margin-top: 12px;
+  }
+  .symbol-card {
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+  }
+  .symbol-card .k {
+    font-weight: 800; color: var(--accent);
+    font-size: 14px; display: block; margin-bottom: 2px;
+  }
+  .symbol-card .m { color: var(--text-2); font-size: 12.5px; line-height: 1.5; }
 
   /* ---------- 안내 / 에러 ---------- */
   .notice {
@@ -860,24 +948,104 @@ const DREAM_DICT = [
   { keys: ['알','달걀','계란'], nums:[1,8,17,24,31,40], meaning:'알 꿈은 잠재력의 발현, 새로운 가능성을 상징합니다.' },
   { keys: ['거지','구걸','노숙'], nums:[2,11,18,25,34,41], meaning:'역설적으로 풍요와 도움의 손길이 다가오는 꿈입니다.' },
   { keys: ['벌','벌꿀','꿀벌'], nums:[6,13,22,29,36,45], meaning:'벌 꿈은 부지런함의 결실, 달콤한 보상을 의미합니다.' },
+  { keys: ['하늘','구름','무지개','노을'], nums:[5,12,19,26,38,44], meaning:'맑은 하늘과 무지개는 희망과 좋은 변화의 전조입니다.' },
+  { keys: ['옷','드레스','정장','한복','새옷'], nums:[2,11,18,29,33,40], meaning:'새 옷 꿈은 신분이나 위치의 변화, 새 출발을 뜻합니다.' },
+  { keys: ['머리','삭발','이발','염색'], nums:[3,15,21,28,36,42], meaning:'머리를 자르거나 단장하는 꿈은 묵은 근심의 해소를 뜻합니다.' },
+  { keys: ['이빨','치아','이가빠지'], nums:[8,16,23,30,37,43], meaning:'이가 빠지는 꿈은 가까운 사람의 변화나 자기 관리에 대한 신호로 해석됩니다.' },
+  { keys: ['계약','도장','서명','싸인'], nums:[4,13,20,27,34,41], meaning:'계약·서명 꿈은 중요한 결정의 성사와 책임의 시작을 뜻합니다.' },
 ];
 
+/* 각 항목의 폴라리티(가중치) — keys 0번 기준 매핑 */
+const POLARITY = {
+  '돼지':1.6, '똥':1.4, '조상':1.3, '불':1.3, '물':1.1, '바다':1.2, '뱀':1.4, '용':1.7,
+  '돈':1.5, '임신':1.4, '죽음':1.3, '결혼':1.2, '호랑이':1.3, '고양이':1.0, '개':1.0,
+  '새':1.2, '꽃':1.2, '산':1.2, '비':1.0, '집':1.1, '차':1.0, '학교':1.0, '친구':1.0,
+  '연예인':1.1, '아기':1.2, '사과':1.2, '금':1.4, '해':1.5, '달':1.1, '별':1.2, '눈':1.1,
+  '전쟁':0.9, '병원':0.9, '책':1.0, '거울':0.9, '길':1.0, '열쇠':1.2, '편지':1.1,
+  '음식':1.1, '신':1.4, '물고기':1.3, '알':1.1, '거지':1.0, '벌':1.1,
+  '하늘':1.2, '옷':1.0, '머리':1.0, '이빨':0.7, '계약':1.2,
+};
+
+/* 강조어/꾸밈말 가중 */
+const MODIFIERS = {
+  '큰':1.3,'커다란':1.4,'거대한':1.5,'엄청난':1.4,'어마어마한':1.5,
+  '많은':1.3,'여러':1.2,'한가득':1.4,'가득':1.3,'무더기':1.4,
+  '작은':0.85,'조그만':0.8,'적은':0.85,
+  '밝은':1.2,'환한':1.2,'반짝이는':1.3,'빛나는':1.3,'금빛':1.4,
+  '어두운':0.85,'시커먼':0.85,'검은':0.9,
+};
+
+/* 행동 동사(어간 매칭): 꿈에서의 동작에 따른 가중 */
+const ACTIONS = {
+  '받았':1.5,'받는':1.4,'받':1.4,'얻었':1.4,'얻':1.35,'생겼':1.3,
+  '잡았':1.35,'잡는':1.3,'잡':1.3,'안았':1.3,'안는':1.25,'품었':1.25,
+  '먹었':1.2,'먹는':1.15,'먹':1.15,
+  '봤':1.0,'본':1.0,'보았':1.0,
+  '만났':1.15,'만나':1.1,
+  '들어왔':1.45,'들어옴':1.4,'들어오':1.4,
+  '날아':1.2,'올랐':1.25,'올라':1.2,
+  '도망':0.7,'쫓겼':0.75,'잃었':0.6,'잃':0.6,'떨어졌':0.85,
+};
+
+/* 감정/감성 사전 */
+const EMOTIONS = {
+  positive: ['기뻐','기쁘','즐거','즐겁','행복','웃','신난','신나','뿌듯','편안','평화','상쾌','좋'],
+  negative: ['무서','두려','슬프','슬퍼','우울','괴로','걱정','불안','아프','싫'],
+  surprise: ['깜짝','갑자기','놀라','어머','와'],
+};
+
+/* === 한국어 토큰화 + 키워드/수식어/동사/감성 동시 분석 === */
 function analyzeDream(text) {
-  const t = text.toLowerCase().replace(/\s+/g,' ');
-  const matched = [];
-  DREAM_DICT.forEach(entry => {
-    for (const k of entry.keys) {
-      if (t.includes(k)) { matched.push({ key: k, entry }); break; }
-    }
+  const cleaned = text.replace(/\s+/g,' ').trim();
+  const sentences = cleaned.split(/[.!?。\n]+/).map(s=>s.trim()).filter(Boolean);
+  const matches = [];
+  const seenKeys = new Set();
+
+  sentences.forEach((sent, sIdx) => {
+    DREAM_DICT.forEach(entry => {
+      const dupKey = entry.keys[0];
+      if (seenKeys.has(dupKey)) return;
+      for (const k of entry.keys) {
+        if (sent.includes(k)) {
+          let modScore = 1.0;
+          for (const [m, w] of Object.entries(MODIFIERS)) {
+            if (sent.includes(m + ' ' + k) || sent.includes(m + k)) modScore *= w;
+          }
+          let actScore = 1.0;
+          for (const [a, w] of Object.entries(ACTIONS)) {
+            if (sent.includes(a)) { actScore = Math.max(actScore, w); }
+          }
+          const polarity = POLARITY[dupKey] || 1.0;
+          seenKeys.add(dupKey);
+          matches.push({
+            key: k, entry, sentence: sent, sIdx,
+            polarity, modScore, actScore,
+            score: polarity * modScore * actScore,
+          });
+          break;
+        }
+      }
+    });
   });
-  return matched;
+
+  let sentiment = 0;
+  for (const w of EMOTIONS.positive) if (cleaned.includes(w)) sentiment += 1;
+  for (const w of EMOTIONS.negative) if (cleaned.includes(w)) sentiment -= 1;
+  let surprise = 0;
+  for (const w of EMOTIONS.surprise) if (cleaned.includes(w)) surprise += 1;
+
+  matches.sort((a,b) => b.score - a.score);
+  const totalScore = matches.reduce((s,m)=>s+m.score, 0);
+  const depth = Math.min(100, Math.round(matches.length * 14 + sentences.length * 6 + surprise * 4 + Math.abs(sentiment) * 5));
+
+  return { matches, sentiment, surprise, sentenceCount: sentences.length, charCount: cleaned.length, totalScore, depth };
 }
-function aggregateNumbers(matched) {
+
+function recommendNumbers(matches) {
   const score = {};
-  matched.forEach((m, i) => {
-    const weight = 1 + (matched.length - i) * 0.1;
+  matches.forEach(m => {
     m.entry.nums.forEach((n, j) => {
-      const w = weight * (1 - j*0.05);
+      const w = m.score * (1 - j*0.05);
       score[n] = (score[n] || 0) + w;
     });
   });
@@ -888,6 +1056,72 @@ function aggregateNumbers(matched) {
     if (!picked.includes(r)) picked.push(r);
   }
   return picked.sort((a,b)=>a-b);
+}
+
+function pickRand(arr) { return arr[secureRandInt(arr.length)]; }
+function buildNarrative(analysis) {
+  const { matches, sentiment, surprise, totalScore } = analysis;
+
+  const opener = pickRand([
+    '🔮 잠재의식이 보낸 신호를 정성껏 풀어보면,',
+    '✨ 입력하신 꿈을 동양 전통 해몽서의 관점으로 분석하면,',
+    '🌙 꿈속 상징을 하나씩 해독한 결과,',
+    '🪄 등장 요소의 의미와 감정의 결을 따라가 보면,',
+  ]);
+
+  let moodLabel, moodClass;
+  if (totalScore >= 4) { moodLabel = '강한 길몽'; moodClass = 'high'; }
+  else if (totalScore >= 2) { moodLabel = '뚜렷한 길조'; moodClass = 'high'; }
+  else if (totalScore >= 1) { moodLabel = '잔잔한 길조'; moodClass = 'mid'; }
+  else if (totalScore > 0) { moodLabel = '평온한 신호'; moodClass = 'mid'; }
+  else { moodLabel = '균형의 신호'; moodClass = 'low'; }
+  if (sentiment <= -2) { moodLabel = '주의가 필요한 신호'; moodClass = 'low'; }
+
+  const top = matches.slice(0, 3);
+  let body;
+  if (top.length === 0) {
+    body = '뚜렷한 상징 키워드는 잡히지 않았지만, 꿈 자체가 잠재의식의 메시지입니다. 다음에는 등장 인물·동물·색상·감정을 함께 적어주시면 더 깊이 해석해 드릴 수 있습니다.';
+  } else if (top.length === 1) {
+    const m = top[0];
+    body = `<span class="em">「${m.key}」</span>가 핵심 상징으로 포착됩니다. ${m.entry.meaning}`;
+  } else {
+    const lead = top[0];
+    const others = top.slice(1).map(m => `「${m.key}」`).join('과 ');
+    body = `가장 두드러진 상징은 <span class="em">「${lead.key}」</span>이며, ${others} 또한 의미 있는 신호입니다. ${lead.entry.meaning}`;
+  }
+
+  let mood = '';
+  if (sentiment >= 2) mood = ' 전반적으로 따뜻하고 긍정적인 정서가 감지되어 길몽의 강도가 한층 높아집니다.';
+  else if (sentiment <= -2) mood = ' 다만 다소 무겁고 불안한 정서가 함께 읽히므로, 변화의 시기에 신중함을 더하시기 바랍니다.';
+  else if (surprise >= 1) mood = ' 놀라움과 의외성이 함께 감지되어, 예상치 못한 기회가 다가올 가능성을 시사합니다.';
+
+  const closing = pickRand([
+    '🍀 아래 추천 번호는 위 분석 결과를 가중 평균한 결과입니다.',
+    '🍀 각 상징의 전통 행운수를 가중 합산한 추천 번호입니다.',
+    '🍀 꿈의 상징과 정서를 종합해 도출한 번호입니다.',
+  ]);
+
+  return { opener, body, mood, closing, moodLabel, moodClass, top };
+}
+
+async function showThinking(root, analysis) {
+  const steps = [
+    { msg: '꿈 텍스트를 문장 단위로 토큰화', detail: `${analysis.sentenceCount}개 문장 · ${analysis.charCount}자 입력` },
+    { msg: '핵심 상징 키워드 추출', detail: `${DREAM_DICT.length}개 사전 항목 · ${DREAM_DICT.reduce((s,e)=>s+e.keys.length,0)}개 키워드 스캔` },
+    { msg: '수식어·행동 동사 가중치 계산', detail: `매칭 ${analysis.matches.length}건` },
+    { msg: '감성 분석 (긍정/부정/놀람)', detail: `정서 ${analysis.sentiment>0?'+':''}${analysis.sentiment} · 놀람 ${analysis.surprise}` },
+    { msg: '길몽 번호 가중 합산 및 정렬', detail: `상징 가중치 합 ${analysis.totalScore.toFixed(2)}` },
+  ];
+  let trace = '';
+  for (const s of steps) {
+    root.innerHTML = `
+      <div class="thinking">
+        <div class="thinking-step">${s.msg}<span class="thinking-dot"></span></div>
+        <div class="thinking-trace">${trace}</div>
+      </div>`;
+    await new Promise(r => setTimeout(r, 220 + secureRandInt(140)));
+    trace += `<span class="ok">✓</span> ${s.msg} <span style="color:var(--muted);">— ${s.detail}</span><br>`;
+  }
 }
 const DREAM_SAMPLES = [
   '어젯밤에 큰 돼지가 우리 집 마당으로 들어와서 돈다발을 물고 있었어요. 옆에는 조상님이 웃고 계셨고요.',
@@ -902,35 +1136,67 @@ document.getElementById('dreamClearBtn').addEventListener('click', () => {
   document.getElementById('dreamInput').value = '';
   document.getElementById('dreamResult').innerHTML = '';
 });
-document.getElementById('dreamBtn').addEventListener('click', () => {
+document.getElementById('dreamBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('dreamBtn');
   const text = document.getElementById('dreamInput').value.trim();
   const root = document.getElementById('dreamResult');
   if (!text) { root.innerHTML = '<div class="error">꿈 내용을 입력해 주세요.</div>'; return; }
   if (text.length < 4) { root.innerHTML = '<div class="error">조금 더 자세히 적어주시면 정확도가 올라갑니다.</div>'; return; }
 
-  const matched = analyzeDream(text);
-  const nums = aggregateNumbers(matched);
+  btn.disabled = true; btn.textContent = '분석 중...';
 
-  let html = '';
-  if (matched.length === 0) {
-    html += `<div class="dream-result">
-      🤔 사전에 등록된 키워드를 찾지 못했지만, 꿈은 잠재의식이 보내는 신호입니다.
-      랜덤 행운 번호를 추천해 드립니다. 다음에는 등장 인물·사물·색상·감정을 함께 적어보세요.
+  const analysis = analyzeDream(text);
+  await showThinking(root, analysis);
+
+  const nums = recommendNumbers(analysis.matches);
+  const nar = buildNarrative(analysis);
+
+  const symbolHtml = nar.top.length === 0 ? '' : `
+    <div class="symbol-grid">
+      ${nar.top.map(m => {
+        const tip = [];
+        if (m.modScore !== 1) tip.push(`수식어 ×${m.modScore.toFixed(2)}`);
+        if (m.actScore !== 1) tip.push(`동작 ×${m.actScore.toFixed(2)}`);
+        if (m.polarity !== 1) tip.push(`상징 ×${m.polarity.toFixed(2)}`);
+        return `<div class="symbol-card">
+          <span class="k">「${m.key}」</span>
+          <span class="m">${m.entry.meaning}</span>
+          ${tip.length ? `<div style="margin-top:6px; font-size:11px; color:var(--muted);">${tip.join(' · ')}</div>` : ''}
+        </div>`;
+      }).join('')}
     </div>`;
-  } else {
-    html += `<div class="dream-result">
-      🔮 <b>해몽 결과</b><br>
-      입력하신 꿈에서 <b>${matched.length}개의 길몽 요소</b>를 발견했습니다.<br><br>
-      ${matched.map(m => `· <b>「${m.key}」</b> — ${m.entry.meaning}`).join('<br>')}
-      <div class="dream-keywords">
-        ${matched.map(m => `<span class="chip">${m.key}</span>`).join('')}
-      </div>
-    </div>`;
-  }
-  html += `<h3>🍀 추천 번호</h3><div class="balls" id="dreamBalls"></div>`;
-  root.innerHTML = html;
+
+  const allChips = analysis.matches.length > 0 ? `
+    <div class="dream-keywords" style="margin-top:12px;">
+      ${analysis.matches.map(m => {
+        const cls = m.score >= 1.3 ? '' : m.score >= 0.9 ? 'neu' : 'neg';
+        return `<span class="chip ${cls}">${m.key}</span>`;
+      }).join('')}
+    </div>` : '';
+
+  root.innerHTML = `
+    <div class="analysis-head">
+      <span class="mood-tag ${nar.moodClass}">${nar.moodLabel}</span>
+      <div class="depth-bar"><div class="depth-bar-fill" id="depthFill"></div></div>
+      <span class="depth-num">분석 깊이 ${analysis.depth}점</span>
+    </div>
+    <div class="narrative">
+      <p>${nar.opener}</p>
+      <p>${nar.body}${nar.mood}</p>
+      <p>${nar.closing}</p>
+    </div>
+    ${symbolHtml}
+    ${allChips}
+    <h3>🍀 추천 번호</h3>
+    <div class="balls" id="dreamBalls"></div>`;
+
+  requestAnimationFrame(() => {
+    document.getElementById('depthFill').style.width = analysis.depth + '%';
+  });
   const ballsRoot = document.getElementById('dreamBalls');
   nums.forEach((n,i) => setTimeout(() => ballsRoot.appendChild(ballEl(n,{pop:true})), i*100));
+
+  btn.disabled = false; btn.textContent = '해몽 & 번호 추천';
 });
 
 </script>
