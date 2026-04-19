@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>보물섬 복권방 — 로또 번호 생성기 · AI 꿈해몽 · 당첨번호</title>
+<meta name="description" content="로또 6/45 번호 자동 생성, 로컬 AI 꿈해몽 번호 추천, 동행복권 공식 당첨번호 조회를 한 페이지에서.">
+<style>
+  :root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --surface-2: #fafbfd;
+    --border: #e5e8ef;
+    --border-strong: #d4d9e3;
+    --text: #1a2233;
+    --text-2: #4a5568;
+    --muted: #8a93a6;
+    --primary: #1f4ed8;
+    --primary-deep: #1e40af;
+    --primary-soft: #eef2ff;
+    --accent: #b8860b;
+    --accent-soft: #fff8e1;
+    --success: #15803d;
+    --danger: #c53030;
+    --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 12px rgba(15,23,42,.05);
+    --shadow-lg: 0 4px 20px rgba(15,23,42,.08);
+    --radius: 12px;
+    --radius-sm: 8px;
+
+    /* 공식 로또공 색상 (동행복권 기준) */
+    --ball-1: #fbc400;   /*  1-10 노랑 */
+    --ball-2: #69c8f2;   /* 11-20 파랑 */
+    --ball-3: #ff7272;   /* 21-30 빨강 */
+    --ball-4: #aaa;      /* 31-40 회색 */
+    --ball-5: #b0d840;   /* 41-45 초록 */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    position: relative;
+    isolation: isolate;
+  }
+  /* 배경 이미지: 실제 복권방 사진 (흐리게) */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: url('IMG_0780.JPG') center center / cover no-repeat;
+    filter: blur(6px) saturate(1.1);
+    transform: scale(1.05); /* 블러 가장자리 가리기 */
+    z-index: -2;
+  }
+  /* 가독성 확보용 오버레이 */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg,
+      rgba(245,247,251,.92) 0%,
+      rgba(245,247,251,.88) 50%,
+      rgba(245,247,251,.94) 100%);
+    z-index: -1;
+  }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px 60px; }
+
+  /* ---------- 상단 헤더 ---------- */
+  header.brand {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .brand-inner {
+    max-width: 880px; margin: 0 auto;
+    padding: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, #fde68a, #d4a017);
+    display: grid; place-items: center;
+    font-size: 22px;
+    box-shadow: 0 2px 6px rgba(212,160,23,.25);
+  }
+  .brand-title h1 {
+    font-size: 18px; font-weight: 700; color: var(--text);
+    letter-spacing: -.3px;
+  }
+  .brand-title small { color: var(--muted); font-size: 12px; }
+  .brand-meta { margin-left: auto; color: var(--muted); font-size: 13px; }
+  .brand-meta b { color: var(--text); font-weight: 600; }
+  a.header-btn {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 14px;
+    background: var(--primary); color: #fff !important;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 700;
+    text-decoration: none;
+    transition: background .15s, transform .1s;
+    box-shadow: 0 2px 6px rgba(31,78,216,.22);
+  }
+  a.header-btn:hover { background: var(--primary-deep); text-decoration: none; }
+  a.header-btn:active { transform: translateY(1px); }
+  a.header-btn .arrow { transition: transform .15s; }
+  a.header-btn:hover .arrow { transform: translateX(3px); }
+
+  /* ---------- 페이지 인트로 ---------- */
+  .intro {
+    text-align: center;
+    padding: 8px 0 24px;
+  }
+  .intro h2 {
+    font-size: 28px; font-weight: 800; letter-spacing: -.5px;
+    margin-bottom: 10px;
+  }
+  .intro p { color: var(--text-2); font-size: 15px; }
+  .badge-row {
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 6px;
+    margin-top: 12px;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--primary-soft); color: var(--primary-deep);
+    font-size: 12px; font-weight: 600;
+    border: 1px solid #dbe4ff;
+  }
+  .badge.gold { background: var(--accent-soft); color: #8b6508; border-color: #f1d68a; }
+  .badge.green { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+
+  /* ---------- 탭 ---------- */
+  nav.tabs {
+    display: flex; gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  nav.tabs button {
+    flex: 1; padding: 11px 12px;
+    background: transparent; color: var(--text-2);
+    border: 0; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all .15s;
+    font-family: inherit;
+  }
+  nav.tabs button:hover { color: var(--text); background: var(--surface-2); }
+  nav.tabs button.active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(31,78,216,.3);
+  }
+
+  /* ---------- 패널 ---------- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    display: none;
+  }
+  .panel.active { display: block; }
+
+  h2.panel-title {
+    font-size: 18px; font-weight: 700; margin-bottom: 6px;
+  }
+  p.panel-desc {
+    color: var(--text-2); font-size: 13.5px; margin-bottom: 18px;
+  }
+  p.panel-desc code {
+    background: #f1f4fa; padding: 1px 6px; border-radius: 4px;
+    font-size: 12px; color: var(--primary-deep);
+  }
+  h3 { font-size: 14px; font-weight: 700; color: var(--text); margin: 18px 0 10px; }
+
+  /* ---------- 폼 ---------- */
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label {
+    color: var(--text-2); font-size: 12px; font-weight: 600;
+  }
+  input[type="number"], input[type="text"], textarea, select {
+    background: #fff; color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px; font-size: 14px;
+    font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type="number"] { width: 90px; }
+  textarea { width: 100%; min-height: 110px; resize: vertical; line-height: 1.55; }
+  input:focus, textarea:focus, select:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(31,78,216,.12);
+  }
+
+  .seg {
+    display: inline-flex;
+    background: #f1f4fa;
+    border-radius: 8px; padding: 3px;
+    border: 1px solid var(--border);
+  }
+  .seg button {
+    background: transparent; border: 0;
+    padding: 7px 14px; font-size: 13px; font-weight: 600;
+    color: var(--text-2); cursor: pointer; border-radius: 6px;
+    font-family: inherit;
+  }
+  .seg button.active { background: #fff; color: var(--primary-deep); box-shadow: var(--shadow); }
+
+  button.primary {
+    background: var(--primary); color: #fff; border: 0;
+    border-radius: var(--radius-sm); padding: 10px 18px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: background .15s;
+    font-family: inherit;
+  }
+  button.primary:hover { background: var(--primary-deep); }
+  button.ghost {
+    background: var(--surface); color: var(--text-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 9px 14px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit;
+  }
+  button.ghost:hover { background: var(--surface-2); color: var(--text); }
+
+
+  /* ---------- 로또 공 (공식 색상) ---------- */
+  .balls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .ball {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 15px; color: #fff;
+    text-shadow: 0 1px 1px rgba(0,0,0,.2);
+    box-shadow: inset 0 -3px 5px rgba(0,0,0,.18), inset 0 2px 3px rgba(255,255,255,.45);
+    transition: transform .15s;
+    flex-shrink: 0;
+  }
+  .ball.pop { animation: pop .35s ease; }
+  @keyframes pop { 0%{transform:scale(.4); opacity:0;} 60%{transform:scale(1.1);} 100%{transform:scale(1); opacity:1;} }
+  .ball.c1 { background: var(--ball-1); color: #5c4400; text-shadow: none; }
+  .ball.c2 { background: var(--ball-2); }
+  .ball.c3 { background: var(--ball-3); }
+  .ball.c4 { background: var(--ball-4); }
+  .ball.c5 { background: var(--ball-5); color: #2d4500; text-shadow: none; }
+  .ball.bonus { outline: 2px dashed #f59e0b; outline-offset: 2px; }
+  .ball.small { width: 32px; height: 32px; font-size: 13px; }
+  .plus {
+    color: var(--muted); font-size: 18px; font-weight: 700;
+    margin: 0 4px;
+  }
+  .ball-legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin-top: 14px; padding: 10px 12px;
+    background: var(--surface-2); border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-size: 12px; color: var(--text-2);
+  }
+  .ball-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .ball-legend i {
+    width: 14px; height: 14px; border-radius: 50%; display: inline-block;
+    box-shadow: inset 0 -2px 3px rgba(0,0,0,.15);
+  }
+  .ball-legend i.c1 { background: var(--ball-1); }
+  .ball-legend i.c2 { background: var(--ball-2); }
+  .ball-legend i.c3 { background: var(--ball-3); }
+  .ball-legend i.c4 { background: var(--ball-4); }
+  .ball-legend i.c5 { background: var(--ball-5); }
+
+  .game-line {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; margin-bottom: 6px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .game-line .label {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: grid; place-items: center;
+    background: var(--primary-soft); color: var(--primary-deep);
+    font-weight: 800; font-size: 13px;
+    flex-shrink: 0;
+  }
+  .game-line .meta { margin-left: auto; color: var(--muted); font-size: 12px; flex-shrink: 0; }
+
+  /* ---------- 마크시트 ---------- */
+  .paper-wrap {
+    margin-top: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+  }
+  .paper-wrap .paper-title {
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 8px; padding: 0 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .paper-wrap .paper-title b { color: var(--text); font-weight: 700; font-size: 13px; }
+  .lotto-paper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1920 / 826;
+    line-height: 0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .lotto-paper img {
+    width: 100%; height: 100%;
+    display: block; object-fit: fill;
+  }
+  .lotto-mark {
+    position: absolute;
+    background: #111;
+    border-radius: 22%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 1px rgba(0,0,0,.4);
+  }
+
+  /* ---------- 꿈해몽 ---------- */
+  .dream-result {
+    margin-top: 18px; padding: 16px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    line-height: 1.7; font-size: 14px;
+    color: var(--text);
+  }
+  .dream-result b { color: var(--text); }
+  .dream-keywords {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 10px;
+  }
+  .chip {
+    background: #fff; color: var(--accent);
+    border: 1px solid #f1d68a;
+    padding: 3px 10px; border-radius: 999px; font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* ---------- 안내 / 에러 ---------- */
+  .notice {
+    padding: 12px 14px;
+    background: var(--primary-soft);
+    border: 1px solid #dbe4ff;
+    border-radius: var(--radius-sm);
+    color: var(--primary-deep);
+    font-size: 13px;
+    margin: 12px 0;
+  }
+  .error {
+    padding: 12px 14px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-sm);
+    color: var(--danger);
+    font-size: 13px;
+  }
+  .loading {
+    padding: 24px; text-align: center;
+    color: var(--muted); font-size: 13px;
+  }
+
+  /* ---------- 통계 ---------- */
+  details {
+    margin-top: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
+  details summary {
+    cursor: pointer; color: var(--text-2);
+    font-size: 13px; font-weight: 600;
+    list-style: none;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: '▸ '; color: var(--muted); transition: transform .15s;
+    display: inline-block; margin-right: 4px;
+  }
+  details[open] summary::before { content: '▾ '; }
+  details[open] summary { color: var(--primary-deep); margin-bottom: 10px; }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+  }
+  .stat {
+    background: #fff; padding: 10px;
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    text-align: center;
+  }
+  .stat .v { color: var(--primary-deep); font-size: 16px; font-weight: 800; }
+  .stat .l { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+  /* ---------- FAQ ---------- */
+  section.faq {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+  section.faq h2 {
+    font-size: 20px; font-weight: 800; margin-bottom: 6px;
+  }
+  section.faq > p {
+    color: var(--text-2); font-size: 13.5px; margin-bottom: 18px;
+  }
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+  }
+  .faq-item:last-child { border-bottom: 0; }
+  .faq-item summary {
+    cursor: pointer; padding: 16px 0;
+    font-size: 15px; font-weight: 600; color: var(--text);
+    list-style: none;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::before {
+    content: 'Q'; color: var(--primary);
+    font-weight: 800; font-size: 14px;
+    background: var(--primary-soft);
+    width: 24px; height: 24px; border-radius: 6px;
+    display: grid; place-items: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .faq-item summary::after {
+    content: '+'; margin-left: auto; color: var(--muted);
+    font-size: 22px; font-weight: 300;
+    transition: transform .2s;
+  }
+  .faq-item[open] summary::after { transform: rotate(45deg); }
+  .faq-item .answer {
+    padding: 0 0 18px 36px;
+    color: var(--text-2); font-size: 14px; line-height: 1.7;
+  }
+  .faq-item .answer b { color: var(--text); }
+
+  /* ---------- 푸터 ---------- */
+  footer {
+    text-align: center;
+    margin-top: 28px; padding: 20px 0;
+    color: var(--muted); font-size: 12px;
+    line-height: 1.7;
+  }
+  footer a { color: var(--text-2); }
+
+  @media (max-width: 600px) {
+    .intro h2 { font-size: 22px; }
+    .ball { width: 36px; height: 36px; font-size: 14px; }
+    nav.tabs button { font-size: 13px; padding: 10px 4px; }
+    .panel { padding: 18px; }
+    section.faq { padding: 18px; }
+    a.header-btn { font-size: 12px; padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <div class="brand-inner">
+    <div class="logo">🍀</div>
+    <div class="brand-title">
+      <h1>보물섬 복권방</h1>
+      <small>BOMULSEOM LOTTERY</small>
+    </div>
+    <a href="https://www.dhlottery.co.kr/lt645/result" target="_blank" rel="noopener" class="header-btn">
+      🏆 당첨번호 조회
+      <span class="arrow">→</span>
+    </a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="intro">
+    <h2>로또 6/45 통합 도구</h2>
+    <p>번호 자동 생성 · AI 꿈해몽 추천 · 공식 당첨번호 조회를 한 페이지에서.</p>
+  </div>
+
+  <nav class="tabs" role="tablist">
+    <button class="active" data-tab="auto">번호 생성</button>
+    <button data-tab="dream">AI 꿈해몽</button>
+  </nav>
+
+  <!-- 자동 생성 -->
+  <section class="panel active" id="tab-auto" role="tabpanel">
+    <h2 class="panel-title">로또 번호 생성</h2>
+    <p class="panel-desc">로또 6/45 번호를 무작위로 생성합니다. <code>window.crypto.getRandomValues</code>를 사용해 암호학적으로 안전한 난수로 추첨하며, 당첨을 보장하지 않습니다.</p>
+
+    <div class="row" style="margin-bottom: 16px;">
+      <div class="field">
+        <label>게임 수</label>
+        <div class="seg" id="gameSeg">
+          <button data-n="1">1게임</button>
+          <button data-n="2">2게임</button>
+          <button data-n="3">3게임</button>
+          <button data-n="4">4게임</button>
+          <button data-n="5" class="active">5게임</button>
+        </div>
+      </div>
+      <button class="primary" id="genBtn">번호 생성</button>
+    </div>
+
+    <div class="row" style="margin-bottom: 18px;">
+      <div class="field" style="flex:1; min-width:220px;">
+        <label>제외할 번호 (쉼표 구분)</label>
+        <input type="text" id="excludeNums" placeholder="예: 7, 13, 22">
+      </div>
+      <div class="field" style="flex:1; min-width:220px;">
+        <label>꼭 포함할 번호 (최대 5개)</label>
+        <input type="text" id="includeNums" placeholder="예: 3, 17">
+      </div>
+    </div>
+
+    <div id="genResult"></div>
+
+    <div class="paper-wrap">
+      <div class="paper-title">
+        <b>📝 마크시트 미리보기</b>
+        <span>생성된 번호가 검정색으로 마킹됩니다</span>
+      </div>
+      <div class="lotto-paper" id="lottoPaper">
+        <img src="lottopaper_small.jpg" alt="로또 6/45 마크시트" id="lottoPaperImg">
+      </div>
+    </div>
+
+    <div class="ball-legend">
+      <span><i class="c1"></i> 1–10</span>
+      <span><i class="c2"></i> 11–20</span>
+      <span><i class="c3"></i> 21–30</span>
+      <span><i class="c4"></i> 31–40</span>
+      <span><i class="c5"></i> 41–45</span>
+    </div>
+
+    <details>
+      <summary>생성 통계 보기</summary>
+      <div id="genStats" class="stats"></div>
+    </details>
+  </section>
+
+  <!-- AI 꿈해몽 -->
+  <section class="panel" id="tab-dream" role="tabpanel">
+    <h2 class="panel-title">AI 꿈해몽 & 번호 추천</h2>
+    <p class="panel-desc">간밤에 꾼 꿈을 자유롭게 적어주세요. PC 내장 사전(45+ 키워드)과 가중치 알고리즘으로 길몽 번호를 추천합니다. <b>외부 AI API를 호출하지 않아 비용이 들지 않으며</b>, 입력 내용은 어떤 서버에도 저장되지 않습니다.</p>
+
+    <textarea id="dreamInput" placeholder="예: 어젯밤에 큰 돼지가 우리 집 마당으로 들어와서 돈다발을 물고 있었어요. 옆에는 조상님이 웃고 계셨고요."></textarea>
+    <div class="row" style="margin-top: 12px;">
+      <button class="primary" id="dreamBtn">해몽 & 번호 추천</button>
+      <button class="ghost" id="dreamSampleBtn">예시 채우기</button>
+      <button class="ghost" id="dreamClearBtn">지우기</button>
+    </div>
+
+    <div id="dreamResult"></div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq" id="faq">
+    <h2>자주 묻는 질문</h2>
+    <p>로또 6/45와 본 도구에 대해 가장 많이 묻는 질문들을 모았습니다.</p>
+
+    <details class="faq-item">
+      <summary>로또 1등 당첨 확률은 얼마인가요?</summary>
+      <div class="answer">
+        45개 숫자 중 6개를 순서 없이 맞추는 조합으로 <b>₄₅C₆ = 8,145,060가지(약 814만분의 1)</b>입니다.
+        매주 구매해도 평생 당첨이 극도로 어렵습니다.
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>수동 번호와 자동 번호 중 당첨률이 더 높은 것은?</summary>
+      <div class="answer">
+        수학적으로 동일한 확률(<b>1/8,145,060</b>)입니다.
+        다만 자동은 사람들의 패턴(1-2-3-4-5-6 등)을 피하기 쉬워 <b>당첨 시 상금 분배에서 유리</b>할 수 있습니다.
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>자주 나오는 로또 번호가 있나요?</summary>
+      <div class="answer">
+        특정 번호가 자주 나온 것처럼 보이지만 이는 확률의 정상적인 편차입니다.
+        과거 번호가 미래 추첨에 영향을 주지 않으므로 <b>‘핫/콜드 번호’ 전략은 수학적 근거가 없습니다.</b>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>로또 당첨금에 세금이 부과되나요?</summary>
+      <div class="answer">
+        네. 기타소득으로 분류되어 <b>200만원 이하는 22%</b>, <b>초과분은 33%</b>(지방세 포함) 세율로 원천징수됩니다.
+        예: 20억 원 당첨 시 약 6억 6천만 원이 세금으로 차감됩니다.
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>이 생성기는 진짜 무작위인가요?</summary>
+      <div class="answer">
+        브라우저의 <b>Web Crypto API(window.crypto.getRandomValues)</b>를 사용해 암호학적으로 안전한 무작위로 추출합니다.
+        일반적인 <code>Math.random()</code>보다 더 높은 무작위성을 보장합니다.
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>로또 공 색상은 어떤 기준인가요?</summary>
+      <div class="answer">
+        동행복권 공식 색상 기준입니다.<br>
+        <b>1–10 노란색 · 11–20 파란색 · 21–30 빨간색 · 31–40 회색(검정) · 41–45 초록색</b>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>로또 2등 조건과 확률은?</summary>
+      <div class="answer">
+        <b>2등</b>은 1등 6개 중 5개 + 보너스(약 1/1,357,510)<br>
+        <b>3등</b>은 6개 중 5개(보너스 제외, 약 1/35,725)<br>
+        <b>5등</b>은 3개 일치로 약 1/8.5
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>로또는 언제 구매할 수 있나요?</summary>
+      <div class="answer">
+        <b>매주 토요일 오후 8시 45분 추첨</b>이며, 판매는 토요일 오후 8시까지입니다.
+        동행복권 앱·홈페이지·편의점·복권점에서 구매할 수 있고, 당첨금은 <b>1년 내 수령</b>해야 합니다.
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    🍀 본 페이지는 로또 6/45 정보 안내용이며, 모든 결과는 참고용입니다. 행운은 계획적으로, 구매는 합리적으로.<br>
+    © 보물섬 복권방 · 데이터 출처: <a href="https://www.dhlottery.co.kr" target="_blank" rel="noopener">동행복권(dhlottery.co.kr)</a>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+ * 보물섬 복권방 — 클라이언트 전용 JS
+ * - Web Crypto API 기반 난수
+ * - 외부 AI API 미사용 (로컬 사전 분석)
+ * - 동행복권 공식 API만 호출
+ * ============================================================ */
+
+/* ---------- 탭 ---------- */
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------- 공통 유틸 ---------- */
+function ballColor(n) {
+  if (n <= 10) return 'c1';
+  if (n <= 20) return 'c2';
+  if (n <= 30) return 'c3';
+  if (n <= 40) return 'c4';
+  return 'c5';
+}
+function ballEl(n, opts={}) {
+  const span = document.createElement('span');
+  span.className = `ball ${ballColor(n)} ${opts.small?'small':''} ${opts.bonus?'bonus':''} ${opts.pop?'pop':''}`;
+  span.textContent = n;
+  return span;
+}
+/* Web Crypto API 기반 정수 난수 (균등 분포) */
+function secureRandInt(maxExclusive) {
+  const buf = new Uint32Array(1);
+  const range = maxExclusive;
+  const limit = Math.floor(0xFFFFFFFF / range) * range;
+  while (true) {
+    crypto.getRandomValues(buf);
+    if (buf[0] < limit) return buf[0] % range;
+  }
+}
+
+/* ============================================================
+ * 1) 번호 자동생성
+ * ============================================================ */
+function parseNumList(str) {
+  if (!str) return [];
+  return str.split(/[,\s]+/).map(s => parseInt(s, 10))
+    .filter(n => Number.isInteger(n) && n >= 1 && n <= 45);
+}
+function generateGame(exclude, include) {
+  const pool = [];
+  for (let i = 1; i <= 45; i++) if (!exclude.includes(i)) pool.push(i);
+  const picked = [...new Set(include)].slice(0, 5).filter(n => !exclude.includes(n));
+  picked.forEach(n => {
+    const idx = pool.indexOf(n);
+    if (idx >= 0) pool.splice(idx, 1);
+  });
+  while (picked.length < 6 && pool.length > 0) {
+    const idx = secureRandInt(pool.length);
+    picked.push(pool.splice(idx, 1)[0]);
+  }
+  return picked.sort((a,b)=>a-b);
+}
+/* 마크시트 좌표 (이미지 1920x826 기준 % — 미세조정 가능)
+ * left/width는 가로 % 기준, top/height는 세로 % 기준
+ * (.lotto-paper에 aspect-ratio가 설정돼 있어 정상 동작) */
+const PAPER = {
+  startX: 21.2,   // A게임 1번 칸 중심 X (가로 %)
+  startY: 14.9,   // A게임 1번 칸 중심 Y (세로 %)
+  cellW: 1.75,    // 가로 셀 간격 (가로 %)
+  cellH: 7.65,    // 세로 셀 간격 (세로 %)
+  gameGap: 14.7,  // 게임(A→B) 간 가로 간격 (가로 %)
+  markW: 1.4,     // 마크 가로 크기 (가로 %)
+  markH: 5.5,     // 마크 세로 크기 (세로 %)
+};
+function renderPaper(games) {
+  const paper = document.getElementById('lottoPaper');
+  if (!paper) return;
+  paper.querySelectorAll('.lotto-mark').forEach(m => m.remove());
+  games.forEach((nums, gameIdx) => {
+    if (gameIdx > 4) return;
+    nums.forEach(n => {
+      const i = n - 1;
+      const col = i % 7, row = Math.floor(i / 7);
+      const left = PAPER.startX + gameIdx * PAPER.gameGap + col * PAPER.cellW;
+      const top  = PAPER.startY + row * PAPER.cellH;
+      const mark = document.createElement('div');
+      mark.className = 'lotto-mark';
+      mark.style.left = left + '%';
+      mark.style.top = top + '%';
+      mark.style.width = PAPER.markW + '%';
+      mark.style.height = PAPER.markH + '%';
+      paper.appendChild(mark);
+    });
+  });
+}
+
+function renderGames(games) {
+  const root = document.getElementById('genResult');
+  root.innerHTML = '';
+  games.forEach((nums, i) => {
+    const line = document.createElement('div');
+    line.className = 'game-line';
+    const lab = document.createElement('div');
+    lab.className = 'label'; lab.textContent = String.fromCharCode(65 + i);
+    line.appendChild(lab);
+    const balls = document.createElement('div');
+    balls.className = 'balls';
+    nums.forEach((n, j) => {
+      const b = ballEl(n, {pop:true});
+      b.style.animationDelay = `${j*60}ms`;
+      balls.appendChild(b);
+    });
+    line.appendChild(balls);
+    const sum = nums.reduce((a,b)=>a+b,0);
+    const odd = nums.filter(n=>n%2).length;
+    const m = document.createElement('div');
+    m.className = 'meta';
+    m.textContent = `합 ${sum} · 홀${odd}/짝${6-odd}`;
+    line.appendChild(m);
+    root.appendChild(line);
+  });
+  // 통계
+  const flat = games.flat();
+  const counts = {};
+  flat.forEach(n => counts[n] = (counts[n]||0)+1);
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const lowZone = flat.filter(n=>n<=22).length;
+  document.getElementById('genStats').innerHTML = `
+    <div class="stat"><div class="v">${flat.length}</div><div class="l">총 추첨수</div></div>
+    <div class="stat"><div class="v">${new Set(flat).size}</div><div class="l">고유 번호수</div></div>
+    <div class="stat"><div class="v">${lowZone}</div><div class="l">저구간(1-22)</div></div>
+    <div class="stat"><div class="v">${flat.length-lowZone}</div><div class="l">고구간(23-45)</div></div>
+    <div class="stat"><div class="v">${top.map(t=>t[0]).join(',')}</div><div class="l">최다 등장</div></div>
+  `;
+  renderPaper(games);
+}
+
+let gameCount = 5;
+document.querySelectorAll('#gameSeg button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#gameSeg button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    gameCount = parseInt(b.dataset.n, 10);
+  });
+});
+document.getElementById('genBtn').addEventListener('click', () => {
+  const exclude = parseNumList(document.getElementById('excludeNums').value);
+  const include = parseNumList(document.getElementById('includeNums').value);
+  if (exclude.some(n => include.includes(n))) {
+    alert('포함번호와 제외번호가 겹칩니다.');
+    return;
+  }
+  if (45 - exclude.length < 6) {
+    alert('제외번호가 너무 많습니다. (최소 6개의 번호가 남아야 함)');
+    return;
+  }
+  const games = [];
+  for (let i = 0; i < gameCount; i++) games.push(generateGame(exclude, include));
+  renderGames(games);
+});
+document.getElementById('genBtn').click();
+
+/* ============================================================
+ * 2) AI 꿈해몽 (로컬 사전 기반)
+ * ============================================================ */
+const DREAM_DICT = [
+  { keys: ['돼지','돼지꿈','돈돼지','새끼돼지'], nums:[1,7,17,27,29,32], meaning:'돼지꿈은 대표적인 길몽으로 재물운과 횡재수를 의미합니다.' },
+  { keys: ['똥','대변','오물','분뇨'], nums:[4,8,15,23,33,41], meaning:'똥꿈은 더러움이 아닌 풍요와 재물의 상징, 막힘없는 흐름을 뜻합니다.' },
+  { keys: ['조상','할아버지','할머니','선조','돌아가신'], nums:[2,7,14,22,33,39], meaning:'조상님이 등장하는 꿈은 보호와 길조의 메시지로 해석됩니다.' },
+  { keys: ['불','화재','불길','불꽃'], nums:[3,9,14,27,38,44], meaning:'불꿈은 활력, 명예, 새로운 시작을 상징합니다.' },
+  { keys: ['물','강','호수','폭포','홍수'], nums:[5,11,19,28,37,40], meaning:'맑은 물은 재물과 정화, 큰물은 변화를 예고합니다.' },
+  { keys: ['바다','파도','해변','섬'], nums:[2,11,20,29,40,45], meaning:'바다 꿈은 큰 기회와 도전, 풍부한 가능성을 상징합니다.' },
+  { keys: ['뱀','구렁이','독사','이무기'], nums:[6,13,16,25,31,42], meaning:'뱀꿈은 지혜와 재물, 임신·태몽의 상징으로도 알려져 있습니다.' },
+  { keys: ['용','승천','여의주'], nums:[8,14,20,27,41,45], meaning:'용꿈은 최고의 길몽으로 출세, 명예, 큰 성공을 의미합니다.' },
+  { keys: ['돈','지폐','동전','금괴','보물'], nums:[4,12,18,26,33,40], meaning:'돈을 줍거나 받는 꿈은 직접적인 재물운 상승을 암시합니다.' },
+  { keys: ['임신','태몽','출산','아기'], nums:[7,9,17,23,29,38], meaning:'임신·태몽은 새로운 시작과 큰 결실을 의미합니다.' },
+  { keys: ['죽음','죽다','장례','시체'], nums:[1,11,20,30,39,43], meaning:'죽음은 끝이 아니라 재탄생, 새 출발의 강력한 길몽입니다.' },
+  { keys: ['결혼','신랑','신부','웨딩'], nums:[4,16,25,33,42,44], meaning:'결혼 꿈은 새로운 인연, 계약, 재물의 결합을 상징합니다.' },
+  { keys: ['호랑이','범','맹수'], nums:[6,10,22,31,36,43], meaning:'호랑이 꿈은 권력, 명예, 강한 추진력을 의미합니다.' },
+  { keys: ['고양이','새끼고양이','캣'], nums:[8,17,24,33,38,44], meaning:'고양이는 직관과 비밀스러운 행운을 상징합니다.' },
+  { keys: ['개','강아지','애견'], nums:[5,11,20,28,34,39], meaning:'개꿈은 의리·우정·충성스러운 인연을 의미합니다.' },
+  { keys: ['새','독수리','비둘기','참새','까치'], nums:[3,9,18,25,36,42], meaning:'새가 날아드는 꿈은 좋은 소식과 기회를 의미합니다.' },
+  { keys: ['꽃','벚꽃','장미','꽃다발'], nums:[4,12,22,31,41,45], meaning:'꽃이 만개한 꿈은 결실과 명예, 사랑의 성취를 뜻합니다.' },
+  { keys: ['산','등산','정상'], nums:[7,15,23,32,37,44], meaning:'산을 오르는 꿈은 목표 달성과 성공을 상징합니다.' },
+  { keys: ['비','소나기','폭우'], nums:[6,14,21,27,35,42], meaning:'비 오는 꿈은 정화와 새로운 기회의 시작을 뜻합니다.' },
+  { keys: ['집','새집','이사','대문'], nums:[5,13,21,30,38,43], meaning:'집과 관련된 꿈은 가정의 안정과 재산 증식을 상징합니다.' },
+  { keys: ['차','자동차','버스','지하철','기차'], nums:[8,16,24,33,40,45], meaning:'이동 수단 꿈은 인생의 새로운 국면, 빠른 진전을 뜻합니다.' },
+  { keys: ['학교','시험','선생님','합격'], nums:[3,10,18,27,36,41], meaning:'학교/시험 꿈은 평가받는 시기, 노력의 결실을 의미합니다.' },
+  { keys: ['친구','옛친구','동창'], nums:[2,15,22,29,34,40], meaning:'친구 꿈은 협력과 인연을 통한 행운을 암시합니다.' },
+  { keys: ['연예인','스타','유명인'], nums:[7,18,25,33,41,44], meaning:'유명인이 등장하는 꿈은 인기, 주목, 좋은 기회를 의미합니다.' },
+  { keys: ['아기','갓난','신생아','어린이'], nums:[7,13,19,27,35,42], meaning:'아기 꿈은 순수한 시작, 새 프로젝트의 길조입니다.' },
+  { keys: ['사과','과일','포도','복숭아','수박'], nums:[5,12,21,28,36,43], meaning:'잘 익은 과일 꿈은 결실과 보상을 상징합니다.' },
+  { keys: ['금','금반지','금목걸이','보석','다이아몬드'], nums:[4,11,18,27,34,45], meaning:'귀금속 꿈은 직접적인 재물운과 가치 상승을 의미합니다.' },
+  { keys: ['해','태양','일출'], nums:[1,10,19,28,37,44], meaning:'태양은 명예와 성공, 새로운 출발의 최상위 길조입니다.' },
+  { keys: ['달','보름달','초승달'], nums:[2,11,20,29,38,43], meaning:'달 꿈은 음의 기운, 임신·여성스러운 행운을 상징합니다.' },
+  { keys: ['별','별똥별','유성'], nums:[6,15,24,33,42,45], meaning:'별 꿈은 소원 성취와 행운의 메시지를 뜻합니다.' },
+  { keys: ['눈','눈사람','눈꽃','겨울'], nums:[3,12,21,30,39,44], meaning:'눈 꿈은 깨끗한 시작과 정화, 풍년을 상징합니다.' },
+  { keys: ['전쟁','싸움','다툼'], nums:[6,17,24,31,38,43], meaning:'갈등 꿈은 막혔던 일이 풀리고 승리할 징조입니다.' },
+  { keys: ['병원','의사','약','수술'], nums:[5,14,22,30,37,44], meaning:'치료 꿈은 회복과 재정비, 새 출발의 의미가 있습니다.' },
+  { keys: ['책','공부','독서'], nums:[2,9,18,25,34,40], meaning:'책 꿈은 지혜를 통한 성취와 좋은 결정의 신호입니다.' },
+  { keys: ['거울','자신','얼굴'], nums:[7,16,23,32,39,45], meaning:'거울 꿈은 자기 성찰과 내면의 발견을 의미합니다.' },
+  { keys: ['길','도로','갈림길'], nums:[4,13,22,29,36,43], meaning:'길 꿈은 인생의 선택과 방향성, 진로의 변화를 뜻합니다.' },
+  { keys: ['열쇠','자물쇠','문'], nums:[5,11,20,27,34,41], meaning:'열쇠 꿈은 기회의 문이 열림을 상징합니다.' },
+  { keys: ['편지','메일','메시지'], nums:[3,14,21,28,35,42], meaning:'편지 꿈은 좋은 소식, 반가운 인연의 도래를 뜻합니다.' },
+  { keys: ['음식','잔치','식사','맛있는'], nums:[6,15,22,31,38,45], meaning:'풍성한 음식은 풍요와 만족, 가족의 화목을 상징합니다.' },
+  { keys: ['신','부처','예수','기도'], nums:[1,8,17,26,35,44], meaning:'신성한 존재가 등장하는 꿈은 강력한 보호와 가호의 메시지입니다.' },
+  { keys: ['물고기','금붕어','잉어','고등어'], nums:[3,10,19,26,33,42], meaning:'물고기 꿈은 노력의 결실과 수확의 길조입니다.' },
+  { keys: ['알','달걀','계란'], nums:[1,8,17,24,31,40], meaning:'알 꿈은 잠재력의 발현, 새로운 가능성을 상징합니다.' },
+  { keys: ['거지','구걸','노숙'], nums:[2,11,18,25,34,41], meaning:'역설적으로 풍요와 도움의 손길이 다가오는 꿈입니다.' },
+  { keys: ['벌','벌꿀','꿀벌'], nums:[6,13,22,29,36,45], meaning:'벌 꿈은 부지런함의 결실, 달콤한 보상을 의미합니다.' },
+];
+
+function analyzeDream(text) {
+  const t = text.toLowerCase().replace(/\s+/g,' ');
+  const matched = [];
+  DREAM_DICT.forEach(entry => {
+    for (const k of entry.keys) {
+      if (t.includes(k)) { matched.push({ key: k, entry }); break; }
+    }
+  });
+  return matched;
+}
+function aggregateNumbers(matched) {
+  const score = {};
+  matched.forEach((m, i) => {
+    const weight = 1 + (matched.length - i) * 0.1;
+    m.entry.nums.forEach((n, j) => {
+      const w = weight * (1 - j*0.05);
+      score[n] = (score[n] || 0) + w;
+    });
+  });
+  const sorted = Object.entries(score).sort((a,b) => b[1]-a[1]).map(e => parseInt(e[0]));
+  const picked = sorted.slice(0, 6);
+  while (picked.length < 6) {
+    const r = secureRandInt(45) + 1;
+    if (!picked.includes(r)) picked.push(r);
+  }
+  return picked.sort((a,b)=>a-b);
+}
+const DREAM_SAMPLES = [
+  '어젯밤에 큰 돼지가 우리 집 마당으로 들어와서 돈다발을 물고 있었어요. 옆에는 조상님이 웃고 계셨고요.',
+  '하늘에서 용이 승천하는데 여의주를 들고 저에게 다가왔어요.',
+  '맑은 강물에서 큰 물고기를 잡았는데 금빛이었어요. 친구가 옆에서 박수쳤습니다.',
+];
+document.getElementById('dreamSampleBtn').addEventListener('click', () => {
+  document.getElementById('dreamInput').value =
+    DREAM_SAMPLES[secureRandInt(DREAM_SAMPLES.length)];
+});
+document.getElementById('dreamClearBtn').addEventListener('click', () => {
+  document.getElementById('dreamInput').value = '';
+  document.getElementById('dreamResult').innerHTML = '';
+});
+document.getElementById('dreamBtn').addEventListener('click', () => {
+  const text = document.getElementById('dreamInput').value.trim();
+  const root = document.getElementById('dreamResult');
+  if (!text) { root.innerHTML = '<div class="error">꿈 내용을 입력해 주세요.</div>'; return; }
+  if (text.length < 4) { root.innerHTML = '<div class="error">조금 더 자세히 적어주시면 정확도가 올라갑니다.</div>'; return; }
+
+  const matched = analyzeDream(text);
+  const nums = aggregateNumbers(matched);
+
+  let html = '';
+  if (matched.length === 0) {
+    html += `<div class="dream-result">
+      🤔 사전에 등록된 키워드를 찾지 못했지만, 꿈은 잠재의식이 보내는 신호입니다.
+      랜덤 행운 번호를 추천해 드립니다. 다음에는 등장 인물·사물·색상·감정을 함께 적어보세요.
+    </div>`;
+  } else {
+    html += `<div class="dream-result">
+      🔮 <b>해몽 결과</b><br>
+      입력하신 꿈에서 <b>${matched.length}개의 길몽 요소</b>를 발견했습니다.<br><br>
+      ${matched.map(m => `· <b>「${m.key}」</b> — ${m.entry.meaning}`).join('<br>')}
+      <div class="dream-keywords">
+        ${matched.map(m => `<span class="chip">${m.key}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+  html += `<h3>🍀 추천 번호</h3><div class="balls" id="dreamBalls"></div>`;
+  root.innerHTML = html;
+  const ballsRoot = document.getElementById('dreamBalls');
+  nums.forEach((n,i) => setTimeout(() => ballsRoot.appendChild(ballEl(n,{pop:true})), i*100));
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# 중간 산출물
+lottopaper.b64
+
+# 대용량 디자인 원본
+*.psd
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
