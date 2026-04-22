@@ -869,8 +869,12 @@ document.getElementById('genBtn').addEventListener('click', () => {
 document.getElementById('genBtn').click();
 
 /* ============================================================
- * 2) AI 꿈해몽 (로컬 사전 기반)
+ * 2) AI 꿈해몽 (로컬 사전 + 옵션 LLM 하이브리드)
  * ============================================================ */
+/* Cloudflare Worker 배포 후 URL을 여기 넣으면 하이브리드 활성화
+ * (로컬 사전 매칭 < 2건일 때만 호출). 빈 문자열이면 로컬 전용. */
+const DREAM_API_ENDPOINT = "";
+
 const DREAM_DICT = [
   { keys: ['돼지','돼지꿈','돈돼지','새끼돼지'], nums:[1,7,17,27,29,32], meaning:'돼지꿈은 대표적인 길몽으로 재물운과 횡재수를 의미합니다.' },
   { keys: ['똥','대변','오물','분뇨'], nums:[4,8,15,23,33,41], meaning:'똥꿈은 더러움이 아닌 풍요와 재물의 상징, 막힘없는 흐름을 뜻합니다.' },
@@ -1176,23 +1180,52 @@ document.getElementById('dreamBtn').addEventListener('click', async () => {
   const analysis = analyzeDream(text);
   await showThinking(root, analysis);
 
-  const nums = recommendNumbers(analysis.matches);
+  // --- 하이브리드: 로컬 매칭이 빈약할 때만 LLM 보강 호출 ---
+  let aiBoost = null;
+  const needsBoost = DREAM_API_ENDPOINT && analysis.matches.length < 2 && text.length >= 10;
+  if (needsBoost) {
+    root.innerHTML += `
+      <div class="thinking" id="aiThinking">
+        <div class="thinking-step">AI가 상징을 더 깊이 해석 중<span class="thinking-dot"></span></div>
+      </div>`;
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 12000);
+      const res = await fetch(DREAM_API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text, matchedKeys: analysis.matches.map(m => m.key) }),
+        signal: ctl.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) aiBoost = await res.json();
+    } catch (e) {
+      console.warn('AI 보강 실패, 로컬로 폴백:', e);
+    }
+    document.getElementById('aiThinking')?.remove();
+  }
+
+  const nums = (aiBoost?.numbers?.length === 6) ? aiBoost.numbers : recommendNumbers(analysis.matches);
   const nar = buildNarrative(analysis);
 
-  const symbolHtml = nar.top.length === 0 ? '' : `
-    <div class="symbol-grid">
-      ${nar.top.map(m => {
-        const tip = [];
-        if (m.modScore !== 1) tip.push(`수식어 ×${m.modScore.toFixed(2)}`);
-        if (m.actScore !== 1) tip.push(`동작 ×${m.actScore.toFixed(2)}`);
-        if (m.polarity !== 1) tip.push(`상징 ×${m.polarity.toFixed(2)}`);
-        return `<div class="symbol-card">
-          <span class="k">「${m.key}」</span>
-          <span class="m">${m.entry.meaning}</span>
-          ${tip.length ? `<div style="margin-top:6px; font-size:11px; color:var(--muted);">${tip.join(' · ')}</div>` : ''}
-        </div>`;
-      }).join('')}
-    </div>`;
+  const localSymbolCards = nar.top.map(m => {
+    const tip = [];
+    if (m.modScore !== 1) tip.push(`수식어 ×${m.modScore.toFixed(2)}`);
+    if (m.actScore !== 1) tip.push(`동작 ×${m.actScore.toFixed(2)}`);
+    if (m.polarity !== 1) tip.push(`상징 ×${m.polarity.toFixed(2)}`);
+    return `<div class="symbol-card">
+        <span class="k">「${m.key}」</span>
+        <span class="m">${m.entry.meaning}</span>
+        ${tip.length ? `<div style="margin-top:6px; font-size:11px; color:var(--muted);">${tip.join(' · ')}</div>` : ''}
+      </div>`;
+  });
+  const aiSymbolCards = (aiBoost?.symbols || []).map(s => `
+    <div class="symbol-card" style="border-color:#c7d2fe; background:#f5f7ff;">
+      <span class="k">✨ 「${escapeHtml(s.key)}」</span>
+      <span class="m">${escapeHtml(s.meaning)}</span>
+    </div>`);
+  const symbolCards = [...localSymbolCards, ...aiSymbolCards];
+  const symbolHtml = symbolCards.length === 0 ? '' : `<div class="symbol-grid">${symbolCards.join('')}</div>`;
 
   const allChips = analysis.matches.length > 0 ? `
     <div class="dream-keywords" style="margin-top:12px;">
@@ -1202,17 +1235,24 @@ document.getElementById('dreamBtn').addEventListener('click', async () => {
       }).join('')}
     </div>` : '';
 
+  const aiNarrativeHtml = aiBoost?.interpretation ? `
+    <div class="narrative" style="background:linear-gradient(180deg,#eef2ff 0%,#e0e7ff 100%); border-left-color:var(--primary);">
+      <p><b>✨ AI 심층 해석</b></p>
+      <p>${escapeHtml(aiBoost.interpretation)}</p>
+    </div>` : '';
+
   root.innerHTML = `
     <div class="analysis-head">
       <span class="mood-tag ${nar.moodClass}">${nar.moodLabel}</span>
       <div class="depth-bar"><div class="depth-bar-fill" id="depthFill"></div></div>
-      <span class="depth-num">분석 깊이 ${analysis.depth}점</span>
+      <span class="depth-num">분석 깊이 ${analysis.depth}점${aiBoost ? ' · ✨ AI 보강' : ''}</span>
     </div>
     <div class="narrative">
       <p>${nar.opener}</p>
       <p>${nar.body}${nar.mood}</p>
       <p>${nar.closing}</p>
     </div>
+    ${aiNarrativeHtml}
     ${symbolHtml}
     ${allChips}
     <h3>🍀 추천 번호</h3>
@@ -1226,6 +1266,10 @@ document.getElementById('dreamBtn').addEventListener('click', async () => {
 
   btn.disabled = false; btn.textContent = '해몽 & 번호 추천';
 });
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
 </script>
 </body>

@@ -1,0 +1,6 @@
+name = "bmslotteryshop-dream"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# ANTHROPIC_API_KEY는 커밋하지 않고 secret으로 주입:
+#   wrangler secret put ANTHROPIC_API_KEY
