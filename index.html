@@ -74,11 +74,11 @@
   header.brand {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    margin-bottom: 28px;
+    margin-bottom: 16px;
   }
   .brand-inner {
     max-width: 880px; margin: 0 auto;
-    padding: 16px;
+    padding: 10px 16px;
     display: flex; align-items: center; gap: 12px;
   }
   .logo {
@@ -114,7 +114,7 @@
   /* ---------- 페이지 인트로 ---------- */
   .intro {
     text-align: center;
-    padding: 8px 0 24px;
+    padding: 4px 0 20px;
   }
   .intro h2 {
     font-size: 28px; font-weight: 800; letter-spacing: -.5px;
@@ -215,6 +215,7 @@
     padding: 7px 14px; font-size: 13px; font-weight: 600;
     color: var(--text-2); cursor: pointer; border-radius: 6px;
     font-family: inherit;
+    white-space: nowrap;
   }
   .seg button.active { background: #fff; color: var(--primary-deep); box-shadow: var(--shadow); }
 
@@ -292,7 +293,6 @@
     font-weight: 800; font-size: 13px;
     flex-shrink: 0;
   }
-  .game-line .meta { margin-left: auto; color: var(--muted); font-size: 12px; flex-shrink: 0; }
 
   /* ---------- 마크시트 ---------- */
   .paper-wrap {
@@ -551,7 +551,9 @@
 
   @media (max-width: 600px) {
     .intro h2 { font-size: 22px; }
-    .ball { width: 36px; height: 36px; font-size: 14px; }
+    .ball { width: 30px; height: 30px; font-size: 13px; }
+    .balls { gap: 4px; }
+    .seg button { padding: 6px 10px; font-size: 12px; }
     nav.tabs button { font-size: 13px; padding: 10px 4px; }
     .panel { padding: 18px; }
     section.faq { padding: 18px; }
@@ -569,7 +571,7 @@
       <small>BOMULSEOM LOTTERY</small>
     </div>
     <a href="https://www.dhlottery.co.kr/lt645/result" target="_blank" rel="noopener" class="header-btn">
-      🏆 당첨번호 조회
+      🏆 당첨 조회
       <span class="arrow">→</span>
     </a>
   </div>
@@ -578,7 +580,7 @@
 <div class="wrap">
 
   <div class="intro">
-    <h2>로또 6/45 통합 도구</h2>
+    <h2>로또 6/45 번호 생성기</h2>
     <p>번호 자동 생성 · AI 꿈해몽 추천 · 공식 당첨번호 조회를 한 페이지에서.</p>
   </div>
 
@@ -851,12 +853,6 @@ function renderGames(games) {
       balls.appendChild(b);
     });
     line.appendChild(balls);
-    const sum = nums.reduce((a,b)=>a+b,0);
-    const odd = nums.filter(n=>n%2).length;
-    const m = document.createElement('div');
-    m.className = 'meta';
-    m.textContent = `합 ${sum} · 홀${odd}/짝${6-odd}`;
-    line.appendChild(m);
     root.appendChild(line);
   });
   // 통계
