@@ -558,6 +558,8 @@
     .panel { padding: 18px; }
     section.faq { padding: 18px; }
     a.header-btn { font-size: 12px; padding: 8px 10px; }
+    label { font-size: 11px; }
+    input[type="text"] { font-size: 13px; padding: 7px 10px; }
   }
 </style>
 </head>
@@ -609,11 +611,11 @@
     </div>
 
     <div class="row" style="margin-bottom: 18px;">
-      <div class="field" style="flex:1; min-width:220px;">
+      <div class="field" style="flex:1; min-width:0;">
         <label>제외할 번호 (쉼표 구분)</label>
         <input type="text" id="excludeNums" placeholder="예: 7, 13, 22">
       </div>
-      <div class="field" style="flex:1; min-width:220px;">
+      <div class="field" style="flex:1; min-width:0;">
         <label>꼭 포함할 번호 (최대 5개)</label>
         <input type="text" id="includeNums" placeholder="예: 3, 17">
       </div>
