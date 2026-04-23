@@ -555,6 +555,87 @@
   }
   footer a { color: var(--text-2); }
 
+  /* ---------- 홈 화면 설치 배너 ---------- */
+  .install-banner {
+    position: fixed; left: 16px; right: 16px; bottom: 16px;
+    margin: 0 auto; max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 12px 12px 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    z-index: 1000;
+    animation: slideUp .25s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .install-banner .icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, #fde68a, #d4a017);
+    display: grid; place-items: center;
+    flex-shrink: 0; font-size: 20px;
+    box-shadow: 0 2px 4px rgba(212,160,23,.25);
+  }
+  .install-banner .txt { flex: 1; min-width: 0; line-height: 1.35; }
+  .install-banner .txt b { display: block; font-size: 13.5px; color: var(--text); font-weight: 700; }
+  .install-banner .txt span { color: var(--text-2); font-size: 11.5px; }
+  .install-banner .install-cta {
+    background: var(--primary); color: #fff; border: 0;
+    padding: 8px 14px; border-radius: 8px;
+    font-weight: 700; font-size: 13px;
+    cursor: pointer; flex-shrink: 0;
+    font-family: inherit;
+  }
+  .install-banner .install-cta:hover { background: var(--primary-deep); }
+  .install-banner .install-close {
+    background: transparent; border: 0;
+    color: var(--muted); font-size: 20px; line-height: 1;
+    cursor: pointer; padding: 2px 6px;
+    flex-shrink: 0;
+  }
+  .install-banner .install-close:hover { color: var(--text); }
+
+  .ios-modal {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,.55);
+    display: grid; place-items: center;
+    z-index: 1100; padding: 20px;
+    animation: fadeIn .15s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .ios-modal-inner {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 22px 20px 18px;
+    max-width: 360px; width: 100%;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+  .ios-modal h3 { font-size: 16px; margin: 0 0 12px; color: var(--text); }
+  .ios-modal .step {
+    display: flex; gap: 10px; align-items: center;
+    text-align: left;
+    padding: 10px 12px; margin: 8px 0;
+    background: var(--surface-2); border-radius: 8px;
+    font-size: 13px; color: var(--text); line-height: 1.45;
+  }
+  .ios-modal .step .num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ios-modal .step .ic { font-size: 18px; flex-shrink: 0; }
+  .ios-modal button {
+    margin-top: 10px;
+    background: var(--primary); color: #fff; border: 0;
+    border-radius: 8px; padding: 10px 24px;
+    font-weight: 700; font-size: 13px;
+    cursor: pointer; font-family: inherit;
+  }
+  .ios-modal button:hover { background: var(--primary-deep); }
+
   @media (max-width: 600px) {
     .ball { width: 30px; height: 30px; font-size: 13px; }
     .balls { gap: 4px; }
@@ -583,6 +664,16 @@
     </a>
   </div>
 </header>
+
+<div id="installBanner" class="install-banner" style="display:none" role="region" aria-label="홈 화면에 설치">
+  <div class="icon">🍀</div>
+  <div class="txt">
+    <b>홈 화면에 설치</b>
+    <span>앱처럼 한 번에 열 수 있어요</span>
+  </div>
+  <button id="installCta" class="install-cta">설치</button>
+  <button id="installClose" class="install-close" aria-label="닫기">×</button>
+</div>
 
 <div class="wrap">
 
@@ -1300,6 +1391,88 @@ document.getElementById('dreamBtn').addEventListener('click', async () => {
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+/* ============================================================
+ * 3) 홈 화면 설치 배너 (PWA)
+ * ============================================================ */
+(() => {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+
+  const banner = document.getElementById('installBanner');
+  const cta = document.getElementById('installCta');
+  const closeBtn = document.getElementById('installClose');
+  if (!banner || !cta || !closeBtn) return;
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+                     window.navigator.standalone === true;
+  if (standalone) return;
+  let dismissed = false;
+  try { dismissed = localStorage.getItem('bms-install-dismissed') === '1'; } catch {}
+  if (dismissed) return;
+
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferred = e;
+    banner.style.display = 'flex';
+  });
+
+  // iOS Safari는 beforeinstallprompt가 없음 → 즉시 배너 노출
+  if (isIOS) banner.style.display = 'flex';
+
+  cta.addEventListener('click', async () => {
+    if (deferred) {
+      deferred.prompt();
+      const { outcome } = await deferred.userChoice;
+      if (outcome === 'accepted') dismiss();
+      deferred = null;
+    } else if (isIOS) {
+      showIOSGuide();
+    }
+  });
+
+  closeBtn.addEventListener('click', dismiss);
+  window.addEventListener('appinstalled', dismiss);
+
+  function dismiss() {
+    banner.style.display = 'none';
+    try { localStorage.setItem('bms-install-dismissed', '1'); } catch {}
+  }
+
+  function showIOSGuide() {
+    const overlay = document.createElement('div');
+    overlay.className = 'ios-modal';
+    overlay.innerHTML = `
+      <div class="ios-modal-inner" role="dialog" aria-modal="true">
+        <h3>🍀 iPhone에서 홈 화면에 추가</h3>
+        <div class="step">
+          <span class="num">1</span>
+          <span class="ic">📤</span>
+          <span>Safari 하단 <b>공유</b> 버튼</span>
+        </div>
+        <div class="step">
+          <span class="num">2</span>
+          <span class="ic">➕</span>
+          <span><b>홈 화면에 추가</b> 선택</span>
+        </div>
+        <div class="step">
+          <span class="num">3</span>
+          <span class="ic">✅</span>
+          <span>우측 상단 <b>추가</b>를 누르면 완료</span>
+        </div>
+        <button id="iosClose">확인</button>
+      </div>`;
+    overlay.addEventListener('click', (ev) => {
+      if (ev.target === overlay || ev.target.id === 'iosClose') overlay.remove();
+    });
+    document.body.appendChild(overlay);
+  }
+})();
 
 </script>
 </body>
