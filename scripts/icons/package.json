@@ -1,0 +1,12 @@
+{
+  "name": "icons-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "보물섬 복권방 아이콘/OG 이미지 SVG→PNG 변환",
+  "scripts": {
+    "build": "node generate.js"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
+  }
+}

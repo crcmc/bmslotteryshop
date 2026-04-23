@@ -14,3 +14,6 @@ Thumbs.db
 
 # Claude Code (worktree · 로컬 설정)
 .claude/
+
+# Node
+node_modules/
