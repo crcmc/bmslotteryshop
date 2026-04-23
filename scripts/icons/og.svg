@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f4ed8"/>
+      <stop offset="1" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <radialGradient id="gold" cx="50%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#fff3c4"/>
+      <stop offset="45%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#c48f09"/>
+    </radialGradient>
+    <linearGradient id="leafGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4fae4f"/>
+      <stop offset="1" stop-color="#1f7a1f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 배경 -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- 장식용 반투명 원 -->
+  <circle cx="1150" cy="70" r="180" fill="rgba(253,230,138,.10)"/>
+  <circle cx="50" cy="580" r="220" fill="rgba(253,230,138,.08)"/>
+
+  <!-- 좌측 로고 원 -->
+  <g transform="translate(200 315)">
+    <circle r="150" fill="url(#gold)"/>
+    <circle r="150" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="3"/>
+    <!-- 네잎클로버 (축소) -->
+    <g transform="translate(0 -14) scale(.78)">
+      <g fill="url(#leafGrad)">
+        <path d="M0,-10 C-50,-60 -115,-40 -100,15 C-90,50 -40,50 -10,20 C-5,15 0,5 0,-10 Z" transform="rotate(45)"/>
+        <path d="M0,-10 C-50,-60 -115,-40 -100,15 C-90,50 -40,50 -10,20 C-5,15 0,5 0,-10 Z" transform="rotate(135)"/>
+        <path d="M0,-10 C-50,-60 -115,-40 -100,15 C-90,50 -40,50 -10,20 C-5,15 0,5 0,-10 Z" transform="rotate(225)"/>
+        <path d="M0,-10 C-50,-60 -115,-40 -100,15 C-90,50 -40,50 -10,20 C-5,15 0,5 0,-10 Z" transform="rotate(315)"/>
+      </g>
+      <circle r="14" fill="#144d14"/>
+      <path d="M0 12 Q14 90 -8 170" stroke="#1f7a1f" stroke-width="10" stroke-linecap="round" fill="none"/>
+    </g>
+  </g>
+
+  <!-- 우측 텍스트 영역 -->
+  <g font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans CJK KR',sans-serif" fill="#ffffff">
+    <!-- 메인 타이틀 -->
+    <text x="400" y="210" font-size="96" font-weight="900" letter-spacing="-3">보물섬 복권방</text>
+
+    <!-- 골드 배지 -->
+    <g transform="translate(400 250)">
+      <rect x="0" y="0" width="430" height="68" rx="34" fill="#fde68a"/>
+      <text x="215" y="47" text-anchor="middle" font-size="30" font-weight="800" fill="#7a5200">
+        문정동 1등 2회 배출
+      </text>
+    </g>
+
+    <!-- 서브 카피 -->
+    <text x="400" y="400" font-size="40" font-weight="600" fill="#dbe4ff">
+      로또 6/45 번호 생성 · AI 꿈해몽
+    </text>
+
+    <!-- URL -->
+    <text x="400" y="470" font-size="34" font-weight="700" fill="#fde68a">
+      bmslottery.shop
+    </text>
+  </g>
+</svg>

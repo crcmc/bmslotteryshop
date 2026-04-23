@@ -1,0 +1,16 @@
+{
+  "name": "보물섬 복권방 — 로또 번호 생성기 · AI 꿈해몽",
+  "short_name": "보물섬 복권방",
+  "description": "문정동 1등 2회 배출 복권방의 로또 6/45 번호 생성 · AI 꿈해몽 도구",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "ko-KR",
+  "background_color": "#f5f7fb",
+  "theme_color": "#1f4ed8",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
